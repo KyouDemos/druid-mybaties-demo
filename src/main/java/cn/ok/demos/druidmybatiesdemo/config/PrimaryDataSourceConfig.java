@@ -14,13 +14,29 @@ import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import javax.sql.DataSource;
 
 /**
- * File Header
+ * 配置主数据源
  *
  * @author kyou on 2018-12-06 22:53
  */
 @Configuration
 @MapperScan(basePackages = "cn.ok.demos.druidmybatiesdemo.mapper.primary", sqlSessionFactoryRef = "primarySqlSessionFactory")
 public class PrimaryDataSourceConfig {
+
+    static SqlSessionFactory getSqlSessionFactory(DataSource dataSource) {
+        final SqlSessionFactoryBean ccmSessionFactoryBean = new SqlSessionFactoryBean();
+
+        org.apache.ibatis.session.Configuration ccmConfig = new org.apache.ibatis.session.Configuration();
+        ccmConfig.setMapUnderscoreToCamelCase(true);
+        ccmConfig.setCallSettersOnNulls(true);
+        ccmSessionFactoryBean.setConfiguration(ccmConfig);
+        ccmSessionFactoryBean.setDataSource(dataSource);
+        try {
+            return ccmSessionFactoryBean.getObject();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
 
     @Primary
     @Bean("primaryDataSource")
@@ -37,14 +53,7 @@ public class PrimaryDataSourceConfig {
 
     @Bean(name = "primarySqlSessionFactory")
     @Primary
-    public SqlSessionFactory sqlSessionFactory(@Qualifier("primaryDataSource") DataSource dataSource) throws Exception {
-        final SqlSessionFactoryBean sessionFactoryBean = new SqlSessionFactoryBean();
-
-        org.apache.ibatis.session.Configuration config = new org.apache.ibatis.session.Configuration();
-        config.setMapUnderscoreToCamelCase(true);
-        config.setCallSettersOnNulls(true);
-        sessionFactoryBean.setConfiguration(config);
-        sessionFactoryBean.setDataSource(dataSource);
-        return sessionFactoryBean.getObject();
+    public SqlSessionFactory sqlSessionFactory(@Qualifier("primaryDataSource") DataSource dataSource) {
+        return getSqlSessionFactory(dataSource);
     }
 }
